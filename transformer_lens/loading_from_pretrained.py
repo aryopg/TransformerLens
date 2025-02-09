@@ -11,15 +11,8 @@ from pathlib import Path
 from typing import Dict, Optional, Union
 
 import torch
-from huggingface_hub import HfApi
-from transformers import (
-    AutoConfig,
-    AutoModelForCausalLM,
-    BertForPreTraining,
-    T5ForConditionalGeneration,
-)
-
 import transformer_lens.utils as utils
+from huggingface_hub import HfApi
 from transformer_lens.HookedTransformerConfig import HookedTransformerConfig
 from transformer_lens.pretrained.weight_conversions import (
     convert_bert_weights,
@@ -41,6 +34,12 @@ from transformer_lens.pretrained.weight_conversions import (
     convert_qwen2_weights,
     convert_qwen_weights,
     convert_t5_weights,
+)
+from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    BertForPreTraining,
+    T5ForConditionalGeneration,
 )
 
 OFFICIAL_MODEL_NAMES = [
@@ -251,6 +250,7 @@ OFFICIAL_MODEL_NAMES = [
     "google-t5/t5-base",
     "google-t5/t5-large",
     "ai-forever/mGPT",
+    "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
 ]
 """Official model names for models on HuggingFace."""
 
@@ -1144,9 +1144,11 @@ def convert_hf_model_config(model_name: str, **kwargs):
         use_local_attn = True if hf_config.sliding_window else False
         cfg_dict = {
             "d_model": hf_config.hidden_size,
-            "d_head": hf_config.head_dim
-            if hasattr(hf_config, "head_dim") and hf_config.head_dim > 0
-            else hf_config.hidden_size // hf_config.num_attention_heads,
+            "d_head": (
+                hf_config.head_dim
+                if hasattr(hf_config, "head_dim") and hf_config.head_dim > 0
+                else hf_config.hidden_size // hf_config.num_attention_heads
+            ),
             "n_heads": hf_config.num_attention_heads,
             "d_mlp": hf_config.intermediate_size,
             "n_layers": hf_config.num_hidden_layers,
